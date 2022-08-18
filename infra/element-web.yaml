@@ -142,13 +142,14 @@ metadata:
   name: element
   namespace: element-web
   annotations:
-    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: dyrvold-dev-zerossl
     nginx.ingress.kubernetes.io/configuration-snippet: |
       add_header X-Frame-Options SAMEORIGIN;
       add_header X-Content-Type-Options nosniff;
       add_header X-XSS-Protection "1; mode=block";
       add_header Content-Security-Policy "frame-ancestors 'none'";
 spec:
+  ingressClassName: public
   rules:
     - host: element.dyrvold.dev
       http:
@@ -160,5 +161,17 @@ spec:
                 name: element
                 port:
                   number: 80
-
----
+    - host: element
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: element
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - "element.dyrvold.dev"
+      secretName: element-cert
