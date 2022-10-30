@@ -1,0 +1,127 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dendrite
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dendrite
+  namespace: dendrite
+  labels:
+    app: dendrite
+spec:
+  selector:
+    matchLabels:
+      app: dendrite
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dendrite
+    spec:
+      initContainers:
+        - name: keygen
+          image: matrixdotorg/dendrite-monolith:latest
+          command:
+            - /usr/bin/generate-keys
+          args:
+            - -private-key
+            - /etc/dendrite/matrix_key.pem
+            - -tls-cert
+            - /etc/dendrite/server.crt
+            - -tls-key
+            - /etc/dendrite/server.key
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/dendrite/dendrite.yaml
+              subPath: dendrite.yaml
+            - name: keys
+              mountPath: /etc/dendrite
+      containers:
+        - name: dendrite
+          image: matrixdotorg/dendrite-monolith:latest
+          workingDir: /etc/dendrite
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/dendrite/dendrite.yaml
+              subPath: dendrite.yaml
+              readOnly: true
+            - name: keys
+              mountPath: /etc/dendrite
+          ports:
+            - containerPort: 8008
+              name: dendrite1
+              protocol: TCP
+            - containerPort: 8448
+              name: dendrite2
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /_matrix/client/versions
+              port: 8008
+      volumes:
+      - name: config-volume
+        configMap:
+          name: dendrite-config
+      - name: media
+        emptyDir: {}
+      - name: keys
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dendrite
+  namespace: dendrite
+spec:
+  selector:
+    app: dendrite
+  ports:
+    - name: dendrite1
+      protocol: TCP
+      port: 8008
+      targetPort: dendrite1
+    - name: dendrite2
+      protocol: TCP
+      port: 8448
+      targetPort: dendrite2
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dendrite-homeserver
+  namespace: dendrite
+  annotations:
+    cert-manager.io/cluster-issuer: dyrvold-dev-zerossl
+spec:
+  ingressClassName: public
+  rules:
+    - host: homeserver.dyrvold.dev
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: dendrite
+                port:
+                  name: dendrite1
+    - host: homeserver2.dyrvold.dev
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: dendrite
+                port:
+                  name: dendrite2
+  tls:
+    - hosts:
+        - "homeserver.dyrvold.dev"
+        - "homeserver2.dyrvold.dev"
+      secretName: homeserver-cert
+---
