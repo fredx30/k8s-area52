@@ -18,7 +18,7 @@ spec:
                 name: emby
                 port:
                   name: http
-    - host: emby
+    - host: embys.dyrvold.dev
       http:
         paths:
           - pathType: Prefix
@@ -27,8 +27,9 @@ spec:
               service:
                 name: emby
                 port:
-                  name: http
+                  name: https
   tls:
     - hosts:
         - "emby.dyrvold.dev"
+        - "embys.dyrvold.dev"
       secretName: emby-cert

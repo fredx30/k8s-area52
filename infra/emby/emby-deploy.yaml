@@ -6,15 +6,16 @@ metadata:
     app: emby
   namespace: emby
 spec:
+  type: NodePort
   ports:
-    - port: 8920
-      protocol: TCP
-      targetPort: 8920
-      name: https
     - port: 8096
       protocol: TCP
       targetPort: 8096
       name: http
+    - port: 8920
+      protocol: TCP
+      targetPort: 8920
+      name: https
   selector:
     app: emby
 ---
@@ -35,6 +36,7 @@ spec:
       labels:
         app: emby
     spec:
+      hostNetwork: true
       containers:
         - name: emby
           image: emby/embyserver:latest
@@ -42,15 +44,21 @@ spec:
             - containerPort: 8096
             - containerPort: 8920
           volumeMounts:
-            #- name: emby-config
-            #  mountPath: /config/config/system.xml
-            #  subPath: config-system.xml
+            - name: emby-config
+              mountPath: /config
             - name: emby-data
               mountPath: /mnt/emby-data
+            - name: emby-cert
+              mountPath: /mnt/emby-cert
+
       volumes:
         - name: emby-config
-          configMap:
-            name: emby-config
+          persistentVolumeClaim:
+            claimName: emby-config-claim
         - name: emby-data
           persistentVolumeClaim:
             claimName: emby-media-claim
+        - name: emby-cert
+          secret:
+            secretName: emby-cert
+            optional: true

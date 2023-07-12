@@ -2,14 +2,14 @@
 param()
 
 
-k apply -f ingress-lb.yaml
+kubectl apply -f ingress-lb.yaml
 
 helm repo add jetstack https://charts.jetstack.io
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
 helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace `
-    --version v1.9.1 --set installCRDs=true
+    --version v1.10.1 --set installCRDs=true
 
 Write-host "Create credentials from zerossl."
 $KID = Read-host "EAB_KID: "
@@ -19,7 +19,12 @@ kubectl create secret generic zero-ssl-eab-credentials `
   --from-literal "EAB_HMAC_KEY=${HMAC}" `
   -n cert-manager
 
-k apply -f element.ps1
+$clusterissuer = Get-Content ./clusterissuer-zerossl.yaml
+$clusterissuer.Replace('EAB_KID', $KID)
+$clusterissuer.Replace('EAB_HMAC_KEY', $HMAC)
+$clusterissuer | kubectl apply -f -
+
+kubectl apply -f ./element-web.yaml
 
 
 ## Setup Dendrite (Matrix homeserver)
