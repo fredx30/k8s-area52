@@ -29,3 +29,25 @@ spec:
             hostedZoneName: dyrvold.dev
             # Azure Cloud Environment, default to AzurePublicCloud
             environment: AzurePublicCloud
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sample-cert
+  namespace: cert-manager
+spec:
+  # Secret names are always required.
+  secretName: sample-cert
+  subject:
+    organizations:
+      - dyrvold
+  # The use of the common name field has been deprecated since 2000 and is
+  # discouraged from being used.
+  commonName: test-cert.dyrvold.dev
+  # At least one of a DNS Name, URI, IP address or otherName is required.
+  dnsNames:
+    - test-cert.dyrvold.dev
+  # Issuer references are always required.
+  issuerRef:
+    name: dyrvold-dev-zerossl
+    kind: ClusterIssuer
