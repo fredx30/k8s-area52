@@ -1,5 +1,2 @@
 
-
-kubectl apply -f emby-config.yaml
-kubectl apply -f media-volume.yaml
-kubectl apply -f emby-deploy.yaml
+helm install emby ../emby-chart --create-namespace --namespace emby --values .\emby-chart-values.yaml

@@ -8,7 +8,7 @@ spec:
     email: fredrik@dyrvold.dev
     server: https://acme.zerossl.com/v2/DV90
     externalAccountBinding:
-      keyID: DjlUzDD8bUv17tBDwTHIPA
+      keyID: vZk-UoY3zFo6utAPnKm1hQ
       keySecretRef:
         name: zero-ssl-eab-credentials
         key: EAB_HMAC_KEY

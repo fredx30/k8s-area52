@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.mediaVolume.claimName }}
+  namespace: {{ .Release.Namespace }}
+  {{- with .Values.claimAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "emby-chart.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{ .Values.mediaVolume.size }}
+  {{- if .Values.mediaVolume.hostPath }}
+  volumeName: {{ .Values.mediaVolume.volumeName }}
+  {{- end }}
+---
+{{- if .Values.mediaVolume.hostPath }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.mediaVolume.volumeName }}
+  {{- with .Values.volumeAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "emby-chart.labels" . | nindent 4 }}
+spec:
+  claimRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ .Values.mediaVolume.claimName }}
+  {{- if .Values.mediaVolume.storageClass }}
+  storageClassName: {{ .Values.mediaVolume.storageClass }}
+  {{- end }}
+  capacity:
+    storage: {{ .Values.mediaVolume.size }}
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ .Values.mediaVolume.hostPath }}
+  {{- end }}
