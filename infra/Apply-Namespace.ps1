@@ -1,11 +1,11 @@
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
-helm install `
+helm upgrade --install `
   cert-manager jetstack/cert-manager `
   --namespace cert-manager `
   --create-namespace `
-  --version v1.14.4 `
-  --set installCRDs=true `
+  --version v1.15.3 `
+  --set crds.enabled=true `
   --set ingressShim.defaultIssuerName=dyrvold-dev-zerossl `
   --set ingressShim.defaultIssuerKind=ClusterIssuer
 
